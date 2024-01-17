@@ -24,7 +24,7 @@ Usage of ./lb:
         Health check endpoint (e.g "/health-check") (default "/")
 ```
 
-The [be](/be/) directory contains some simple HTML files that can be used by Python's built-in web servers for testing purposes. See an example of the usage:
+The [be](/be/) directory contains some simple HTML files that can be used by web servers for testing purposes. See an example of the usage of Python's built-in web servers:
 
 ![](/docs/lb.gif)
 
