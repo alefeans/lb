@@ -58,14 +58,16 @@ func (l *LoadBalancer) HealthCheck() {
 
 func (l *LoadBalancer) healthCheck() {
 	for _, server := range l.servers {
-		_, err := l.healthCheckClient.Get(server.healthCheckAddress)
-		if err != nil {
-			server.Unhealthy()
-			slog.Info("Server is unhealthy", "server", server.healthCheckAddress)
-		} else {
-			server.Healthy()
-			slog.Info("Server is healthy", "server", server.healthCheckAddress)
-		}
+		go func(ds *DowmstreamServer) {
+			_, err := l.healthCheckClient.Get(ds.healthCheckAddress)
+			if err != nil {
+				ds.Unhealthy()
+				slog.Info("Server is unhealthy", "server", ds.healthCheckAddress)
+			} else {
+				ds.Healthy()
+				slog.Info("Server is healthy", "server", ds.healthCheckAddress)
+			}
+		}(server)
 	}
 }
 
