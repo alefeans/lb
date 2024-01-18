@@ -22,9 +22,9 @@ type Args struct {
 func parseCliArgs() *Args {
 	var args Args
 	flag.StringVar(&args.address, "a", ":80", "Load balancer server address")
-	flag.IntVar(&args.requestTimeout, "r", 10, "Request timeout for downstream servers in seconds")
-	flag.IntVar(&args.healthCheckTimeout, "t", 10, "Health check timeout in seconds")
-	flag.IntVar(&args.healthCheckInterval, "i", 10, "Downstream servers health check interval in seconds")
+	flag.IntVar(&args.requestTimeout, "r", 3000, "Request timeout for downstream servers in milliseconds")
+	flag.IntVar(&args.healthCheckTimeout, "t", 3000, "Health check timeout in milliseconds")
+	flag.IntVar(&args.healthCheckInterval, "i", 3000, "Downstream servers health check interval in milliseconds")
 	flag.StringVar(&args.healthCheckEndpoint, "u", "/", `Health check endpoint (e.g "/health-check")`)
 	flag.StringVar(&args.servers, "s", "", "Comma-separated list of downstream servers (e.g. http://0.0.0.0:8080,http://localhost:8081)")
 	flag.Parse()
