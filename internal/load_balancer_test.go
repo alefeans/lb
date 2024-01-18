@@ -1,42 +1,13 @@
 package internal
 
 import (
-	"context"
-	"net/http"
 	"testing"
 	"time"
 )
 
-var ValidAddress = "http://localhost:8081"
-
-type StubServer struct {
-	h *http.Server
-}
-
-func NewStubServer() *StubServer {
-	return &StubServer{
-		h: &http.Server{
-			Addr: ValidAddress,
-		},
-	}
-}
-
-func (s *StubServer) Start() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(200)
-	})
-	s.h.ListenAndServe()
-}
-
-func (s *StubServer) Shutdown() {
-	if err := s.h.Shutdown(context.Background()); err != nil {
-		return
-	}
-}
-
 func LoadBalancerWithValidServer() *LoadBalancer {
-	server := NewDownstreamServer(ValidAddress, "/")
-	return NewLoadBalancer(1, 1, 1, []*DowmstreamServer{server})
+	server := NewDownstreamServer("http://localhost:8081", "/")
+	return NewLoadBalancer(100, 100, 100, []*DowmstreamServer{server})
 }
 
 func LoadBalancerWithInvalidServer() *LoadBalancer {
@@ -45,11 +16,10 @@ func LoadBalancerWithInvalidServer() *LoadBalancer {
 }
 
 func TestHealthCheck(t *testing.T) {
-
-	t.Run("HealthCheck Invalid Server", func(t *testing.T) {
+	t.Run("Invalid Server", func(t *testing.T) {
 		lb := LoadBalancerWithInvalidServer()
 		go lb.HealthCheck()
-		<-time.After(time.Millisecond * 1003)
+		<-time.After(time.Millisecond * 105)
 
 		got := lb.servers[0].healthy
 		if got {
@@ -57,30 +27,54 @@ func TestHealthCheck(t *testing.T) {
 		}
 	})
 
-	t.Run("HealthCheck Valid Server", func(t *testing.T) {
-		stub := NewStubServer()
+	t.Run("Valid Server", func(t *testing.T) {
+		stub := NewStubDownstreamServer(":8081")
 		go stub.Start()
-		
+		defer stub.Shutdown()
+
 		lb := LoadBalancerWithValidServer()
 		go lb.HealthCheck()
-		<-time.After(time.Millisecond * 1003)
+		<-time.After(time.Millisecond * 105)
 
 		got := lb.servers[0].healthy
 		if !got {
 			t.Errorf("got %t, want true", got)
 		}
+	})
 
-		// Becoming Unavailable
-		stub.Shutdown()
-		<-time.After(time.Millisecond * 1003)
+	t.Run("Healthy Server Becoming Unhealthy)", func(t *testing.T) {
+		lb := LoadBalancerWithValidServer()
+		go lb.HealthCheck()
+		<-time.After(time.Millisecond * 105)
 
-		got = lb.servers[0].healthy
+		got := lb.servers[0].healthy
 		if got {
 			t.Errorf("got %t, want false", got)
 		}
 	})
 
-	t.Run("HealthCheck Shutdown", func(t *testing.T) {
+	t.Run("Unhealthy Server Becoming Healthy", func(t *testing.T) {
+		lb := LoadBalancerWithValidServer()
+		go lb.HealthCheck()
+		<-time.After(time.Millisecond * 105)
+
+		got := lb.servers[0].healthy
+		if got {
+			t.Errorf("got %t, want false", got)
+		}
+
+		stub := NewStubDownstreamServer(":8081")
+		go stub.Start()
+		defer stub.Shutdown()
+		<-time.After(time.Millisecond * 105)
+
+		got = lb.servers[0].healthy
+		if !got {
+			t.Errorf("got %t, want true", got)
+		}
+	})
+
+	t.Run("Shutdown", func(t *testing.T) {
 		lb := LoadBalancerWithValidServer()
 		go lb.HealthCheck()
 		lb.Shutdown()
@@ -129,7 +123,7 @@ func TestGetDownstreamServer(t *testing.T) {
 			t.Errorf("got %v and err %v, want %s and nil", got, err, want)
 		}
 	})
-	
+
 	t.Run("One Unavailable Server and One Available Server", func(t *testing.T) {
 		lb := LoadBalancerWithValidServer()
 		lb.servers[0].Unhealthy()

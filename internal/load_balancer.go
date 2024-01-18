@@ -21,14 +21,14 @@ type LoadBalancer struct {
 }
 
 func NewLoadBalancer(healthCheckTimeout, requestTimeout, healthCheckInterval int, servers []*DowmstreamServer) *LoadBalancer {
-	ticker := time.NewTicker(time.Duration(healthCheckInterval) * time.Second)
+	ticker := time.NewTicker(time.Duration(healthCheckInterval) * time.Millisecond)
 
 	dc := &http.Client{
-		Timeout: time.Duration(requestTimeout) * time.Second,
+		Timeout: time.Duration(requestTimeout) * time.Millisecond,
 	}
 
 	hc := &http.Client{
-		Timeout: time.Duration(healthCheckTimeout) * time.Second,
+		Timeout: time.Duration(healthCheckTimeout) * time.Millisecond,
 	}
 
 	return &LoadBalancer{

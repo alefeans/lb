@@ -24,3 +24,29 @@ func TestNewDownstreamServer(t *testing.T) {
 		}
 	}
 }
+
+func TestNewDownstreamServers(t *testing.T) {
+	tests := []struct {
+		input    string
+		endpoint string
+		want     []string
+	}{
+		{input: "http://localhost", endpoint: "/", want: []string{"http://localhost/"}},
+		{input: "http://localhost:80,http://localhost:81", endpoint: "/", want: []string{"http://localhost:80/", "http://localhost:81/"}},
+		{input: "http://localhost:80,http://localhost:81,http://localhost:82", endpoint: "/", want: []string{"http://localhost:80/", "http://localhost:81/", "http://localhost:82/"}},
+	}
+
+	for _, test := range tests {
+		got := NewDownstreamServers(test.input, test.endpoint)
+
+		if len(got) != len(test.want) {
+			t.Errorf("got %d, want %d", len(got), len(test.want))
+		}
+
+		for i := 0; i < len(got); i++ {
+			if got[i].healthCheckAddress != test.want[i] {
+				t.Errorf("got %s, want %s", got[i].healthCheckAddress, test.want[i])
+			}
+		}
+	}
+}

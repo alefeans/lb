@@ -32,13 +32,17 @@ func (s *Server) Start() {
 	s.httpServer.ListenAndServe()
 }
 
+func (s *Server) Shutdown(ctx context.Context) error {
+	s.lb.Shutdown()
+	return s.httpServer.Shutdown(ctx)
+}
+
 func (s *Server) GracefulShutdown(ctx context.Context) {
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 	<-shutdown
 
-	s.lb.Shutdown()
-	if err := s.httpServer.Shutdown(ctx); err != nil {
+	if err := s.Shutdown(ctx); err != nil {
 		slog.Error("Graceful shutdown failed", "error", err.Error())
 		return
 	}
