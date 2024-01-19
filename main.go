@@ -34,7 +34,7 @@ func parseCliArgs() *Args {
 func main() {
 	args := parseCliArgs()
 	if args.servers == "" {
-		slog.Info("No downstream servers were set")
+		slog.Error("No downstream servers were set")
 		flag.Usage()
 		os.Exit(1)
 	}
