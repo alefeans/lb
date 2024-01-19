@@ -62,11 +62,10 @@ func (l *LoadBalancer) healthCheck() {
 			_, err := l.healthCheckClient.Get(ds.healthCheckAddress)
 			if err != nil {
 				ds.Unhealthy()
-				slog.Info("Server is unhealthy", "server", ds.healthCheckAddress)
 			} else {
 				ds.Healthy()
-				slog.Info("Server is healthy", "server", ds.healthCheckAddress)
 			}
+			slog.Info("HealthCheck", "server", ds.healthCheckAddress, "healthy", ds.healthy)
 		}(server)
 	}
 }
@@ -108,7 +107,7 @@ func (l *LoadBalancer) NewRequest(server *DowmstreamServer, r *http.Request) (*h
 }
 
 func logRequest(server *DowmstreamServer, r *http.Request) {
-	slog.Info("Request received",
+	slog.Info("Request",
 		"origin", r.RemoteAddr,
 		"method", r.Method,
 		"url", r.URL,
