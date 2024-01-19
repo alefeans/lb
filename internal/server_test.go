@@ -55,35 +55,28 @@ func TestLoadBalancing(t *testing.T) {
 	go server.Start()
 	defer server.Shutdown(context.Background())
 
-	tests := []struct {
-		status int
-		want   []string
-	}{
-		{status: 200, want: []string{"Hello from :8081", "Hello from :8082", "Hello from :8083", "Hello from :8081", "Hello from :8082", "Hello from :8083"}},
-	}
 
 	client := &http.Client{}
+	wants := []string{"Hello from :8081", "Hello from :8082", "Hello from :8083", "Hello from :8081", "Hello from :8082", "Hello from :8083"}
 
-	for _, test := range tests {
-		for _, want := range test.want {
-			resp, err := client.Get("http://localhost:80/")
-			if err != nil {
-				t.Errorf("got unexpected error: %v", err)
-			}
+	for _, want := range wants {
+		resp, err := client.Get("http://localhost:80/")
+		if err != nil {
+			t.Errorf("got unexpected error: %v", err)
+		}
 
-			if resp.StatusCode != test.status {
-				t.Errorf("got %d, want 200", resp.StatusCode)
-			}
+		if resp.StatusCode != 200 {
+			t.Errorf("got %d, want 200", resp.StatusCode)
+		}
 
-			defer resp.Body.Close()
-			got, err := io.ReadAll(resp.Body)
-			if err != nil {
-				t.Errorf("got unexpected error: %v", err)
-			}
+		defer resp.Body.Close()
+		got, err := io.ReadAll(resp.Body)
+		if err != nil {
+			t.Errorf("got unexpected error: %v", err)
+		}
 
-			if string(got) != want {
-				t.Errorf("got %s, want %s", got, want)
-			}
+		if string(got) != want {
+			t.Errorf("got %s, want %s", got, want)
 		}
 	}
 }
